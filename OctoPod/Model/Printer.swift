@@ -65,6 +65,7 @@ class Printer: NSManagedObject {
     @NSManaged var domoticzplugs: [[String]]?
     /// Array of an Array with 2 strings (IP Address, Label)
     @NSManaged var tasmotaplugs: [[String]]?
+    @NSManaged var ikeaTradfriPlugs: [[String]]?
     /// Track if CancelObjects plugin is installed
     @NSManaged var cancelObjectInstalled: Bool
     /// Comma delimited list of objects that should be ignored (cannot be cancelled)
@@ -195,6 +196,29 @@ class Printer: NSManagedObject {
     
     func getTasmotaPlugs() -> [IPPlug]? {
         if let plugs = tasmotaplugs {
+            var result:[IPPlug] = []
+            for plug in plugs {
+                result.append(decodePlug(encoded: plug))
+            }
+            return result
+        }
+        return nil
+    }
+    
+    func setIkeaTradfriPlugs(plugs: [IPPlug]?) {
+        if let newPlugs = plugs {
+            var newValues: [[String]] = []
+            for newPlug in newPlugs {
+                newValues.append(encodeIPPlug(newPlug))
+            }
+            ikeaTradfriPlugs = newValues
+        } else {
+            ikeaTradfriPlugs = nil
+        }
+    }
+    
+    func getIkeaTradfriPlugs() -> [IPPlug]? {
+        if let plugs = ikeaTradfriPlugs {
             var result:[IPPlug] = []
             for plug in plugs {
                 result.append(decodePlug(encoded: plug))

@@ -65,6 +65,11 @@ class SubpanelsViewController: UIViewController, UIPageViewControllerDataSource,
                     orderedViewControllers.append(createIPPlugVCBlock(plugin: Plugins.TASMOTA)(mainboard))
                 }
             }
+            if let plugs = printer.getIkeaTradfriPlugs() {
+                if !plugs.isEmpty {
+                    orderedViewControllers.append(createIPPlugVCBlock(plugin: Plugins.IKEA_TRADFRI)(mainboard))
+                }
+            }
             if printer.cancelObjectInstalled {
                 orderedViewControllers.append(createCancelObjectVC(mainboard))
             }
@@ -149,6 +154,13 @@ class SubpanelsViewController: UIViewController, UIPageViewControllerDataSource,
             if let plugs = printer.getTasmotaPlugs() {
                 addVC = !plugs.isEmpty
             }
+            
+            // Add VC for TPLinkSmartplug
+            if let plugs = printer.getIkeaTradfriPlugs() {
+                addVC = !plugs.isEmpty
+            }
+            addRemoveIPPlugPluginVC(plugin: Plugins.IKEA_TRADFRI, add: addVC)
+            
             addRemoveIPPlugPluginVC(plugin: Plugins.TASMOTA, add: addVC)
             
             addRemoveVC(add: printer.cancelObjectInstalled, vcIdentifier: { $0.isMember(of: CancelObjectViewController.self) }, createVC: createCancelObjectVC)

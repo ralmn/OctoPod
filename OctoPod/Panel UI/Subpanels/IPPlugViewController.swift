@@ -105,6 +105,8 @@ class IPPlugViewController: ThemedDynamicUITableViewController, SubpanelViewCont
             return NSLocalizedString("Domoticz Plugs", comment: "")
         case Plugins.TASMOTA:
             return NSLocalizedString("Tasmota Plugs", comment: "")
+        case Plugins.IKEA_TRADFRI:
+            return NSLocalizedString("Ikea Tradfri Plugs", comment: "")
         default:
             fatalError("Unkonwn plugin")
         }
@@ -166,7 +168,7 @@ class IPPlugViewController: ThemedDynamicUITableViewController, SubpanelViewCont
             let changePower = {
                 if let indexPath = self.tableView.indexPath(for: cell) {
                     let plug = self.plugs[indexPath.row]
-                    if Plugins.TP_LINK_SMARTPLUG == self.ipPlugPlugin {
+                    if Plugins.TP_LINK_SMARTPLUG == self.ipPlugPlugin || Plugins.IKEA_TRADFRI == self.ipPlugPlugin {
                         self.octoprintClient.turnIPPlug(plugin: self.ipPlugPlugin, on: !on, plug: plug) { (result: NSObject?, error: Error?, response: HTTPURLResponse) in
                             // If successfully requested then response is included in the response for this plugin (this changed recently)
                             if let dict = result as? NSDictionary {
@@ -233,6 +235,12 @@ class IPPlugViewController: ThemedDynamicUITableViewController, SubpanelViewCont
                 } else {
                     plugs = []
                 }
+            case Plugins.IKEA_TRADFRI:
+                if let existingPlugs = printer.getIkeaTradfriPlugs(){
+                    plugs = existingPlugs
+                } else {
+                    plugs = []
+                }
             default:
                 fatalError("Unkonwn plugin")
             }
@@ -243,7 +251,7 @@ class IPPlugViewController: ThemedDynamicUITableViewController, SubpanelViewCont
     
     fileprivate func checkPlugsState() {
         for plug in plugs {
-            if Plugins.TP_LINK_SMARTPLUG == ipPlugPlugin {
+            if Plugins.TP_LINK_SMARTPLUG == ipPlugPlugin || Plugins.IKEA_TRADFRI == ipPlugPlugin {
                 octoprintClient.checkIPPlugStatus(plugin: ipPlugPlugin, plug: plug) { (result: NSObject?, error: Error?, response: HTTPURLResponse) in
                     // If successfully requested then response is included in the response for this plugin (this changed recently)
                     if let dict = result as? NSDictionary {

@@ -815,6 +815,7 @@ class OctoPrintClient: WebSocketClientDelegate, AppConfigurationDelegate {
         updatePrinterFromWemoPlugin(printer: printer, plugins: plugins)
         updatePrinterFromDomoticzPlugin(printer: printer, plugins: plugins)
         updatePrinterFromTasmotaPlugin(printer: printer, plugins: plugins)
+        updatePrinterFromIkeaTradfriPlugin(printer: printer, plugins: plugins)
         updatePrinterFromCancelObjectPlugin(printer: printer, plugins: plugins)
         updatePrinterFromOctoPodPlugin(printer: printer, plugins: plugins)
         updatePrinterFromPalette2Plugin(printer: printer, plugins: plugins)
@@ -950,6 +951,49 @@ class OctoPrintClient: WebSocketClientDelegate, AppConfigurationDelegate {
         }) { (printer: Printer, plugs: Array<IPPlug>) in
             printer.setTasmotaPlugs(plugs: plugs)
         }
+    }
+    
+    fileprivate func updatePrinterFromIkeaTradfriPlugin(printer: Printer, plugins: NSDictionary) {
+        /*updatePrinterFromIPPlugPlugin(printer: printer, plugins: plugins, plugin: Plugins.IKEA_TRADFRI, getterPlugs: { (printer: Printer) -> Array<IPPlug>? in
+            return printer.getIkeaTradfriPlugs()
+        }) { (printer: Printer, plugs: Array<IPPlug>) in
+            printer.setIkeaTradfriPlugs(plugs: plugs)
+        }*/
+        var plugs: Array<IPPlug> = [];
+        if let ikeaTradfriPlugin = plugins[Plugins.IKEA_TRADFRI] as? NSDictionary {
+            if let selected_devices = ikeaTradfriPlugin["selected_devices"] as? NSArray {
+                for case let plug as NSDictionary in selected_devices {
+                    let name = plug["name"] as! String;
+                    let id = String(plug["id"] as! Int);
+                    let ipPlug = IPPlug(ip: id, label: name, idx: nil, username: nil, password: nil)
+                    plugs.append(ipPlug);
+                }
+            }
+        }
+        
+        // Check if plugs have changed
+        var update = false
+        if let existing = printer.getIkeaTradfriPlugs() {
+            update = !existing.elementsEqual(plugs)
+        } else {
+            update = true
+        }
+        
+        if update {
+            let newObjectContext = printerManager.newPrivateContext()
+            let printerToUpdate = newObjectContext.object(with: printer.objectID) as! Printer
+            // Update array
+            printer.setIkeaTradfriPlugs(plugs: plugs);
+            // Persist updated printer
+            printerManager.updatePrinter(printerToUpdate, context: newObjectContext)
+            
+            // Notify listeners of change
+            for delegate in octoPrintSettingsDelegates {
+                delegate.ipPlugsChanged(plugin: Plugins.IKEA_TRADFRI, plugs: plugs)
+            }
+        }
+        
+        
     }
     
     fileprivate func updatePrinterFromIPPlugPlugin(printer: Printer, plugins: NSDictionary, plugin: String, getterPlugs: ((Printer) ->  Array<IPPlug>?), setterPlugs: ((Printer, Array<IPPlug>) -> Void)) {
